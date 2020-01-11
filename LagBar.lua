@@ -15,7 +15,7 @@ local function Debug(...)
     if debugf then debugf:AddMessage(string.join(", ", tostringall(...))) end
 end
 
-local MAX_INTERVAL = 1
+local MAX_INTERVAL = 15
 local UPDATE_INTERVAL = 0
 
 ----------------------
@@ -104,7 +104,6 @@ end
 ----------------------
 
 function addon:PLAYER_LOGIN()
-
 	if not LagBar_DB then LagBar_DB = {} end
 	
 	if LagBar_DB.bgShown == nil then LagBar_DB.bgShown = true end
@@ -126,7 +125,6 @@ function addon:PLAYER_LOGIN()
 end
 
 function LagBar_SlashCommand(cmd)
-
 	local a,b,c=strfind(cmd, "(%S+)"); --contiguous string of non-space characters
 	
 	if a then
@@ -164,14 +162,13 @@ function LagBar_SlashCommand(cmd)
 end
 
 function addon:DrawGUI()
-
 	addon:SetWidth(30)
 	addon:SetHeight(25)
 	addon:SetMovable(true)
 	addon:SetClampedToScreen(true)
-	
+
 	addon:SetScale(LagBar_DB.scale)
-	
+
 	if LagBar_DB.bgShown == 1 then
 		addon:SetBackdrop( {
 			bgFile = "Interface\\TutorialFrame\\TutorialFrameBackground";
@@ -184,9 +181,9 @@ function addon:DrawGUI()
 	else
 		addon:SetBackdrop(nil)
 	end
-	
+
 	addon:EnableMouse(true)
-	
+
 	local g = addon:CreateFontString("$parentText", "ARTWORK", "GameFontNormalSmall")
 	g:SetJustifyH("LEFT")
 	g:SetPoint("CENTER",0,0)
@@ -198,45 +195,36 @@ function addon:DrawGUI()
 			self:StartMoving();
 	 	end
 	end)
+
 	addon:SetScript("OnMouseUp",function()
 		if( self.isMoving ) then
-
 			self.isMoving = nil
 			self:StopMovingOrSizing()
-
 			addon:SaveLayout(ADDON_NAME)
-
 		end
 	end)
 
 	addon:SetScript("OnUpdate", function(self, arg1)
-		
 		if (UPDATE_INTERVAL > 0) then
 			UPDATE_INTERVAL = UPDATE_INTERVAL - arg1
 		else
 			UPDATE_INTERVAL = MAX_INTERVAL;
-			
-			--thanks to comix1234 on wowinterface.com for the update.
-			local framerate = floor(GetFramerate() + 0.5)
-			local framerate_text = format("|cff%s%d|r "..L.FPS, LagBar_GetThresholdHexColor(framerate / 60), framerate)
-						
-			local latencyHome = select(3, GetNetStats())
+
+			local _, _, latencyHome, latencyWorld = GetNetStats()
 			local latency_text = format("|cff%s%d|r "..L.Milliseconds, LagBar_GetThresholdHexColor(latencyHome, 1000, 500, 250, 100, 0), latencyHome)
-					
-			local latencyWorld = select(4, GetNetStats())
 			local latency_text_server = format("|cff%s%d|r "..L.Milliseconds, LagBar_GetThresholdHexColor(latencyWorld, 1000, 500, 250, 100, 0), latencyWorld)
 
 			--change text according to worldping
 			if LagBar_DB.worldping then
 				if LagBar_DB.impdisplay then
-					g:SetText(framerate_text.." | |cFF99CC33"..L.Home..":|r"..latency_text.." | |cFF99CC33"..L.World..":|r"..latency_text_server)
+					g:SetText("|cFF99CC33"..L.Home..":|r"..latency_text.." | |cFF99CC33"..L.World..":|r"..latency_text_server)
 				else
-					g:SetText(framerate_text.." | "..latency_text.." | "..latency_text_server)
+					g:SetText(latency_text.." | "..latency_text_server)
 				end
 			else
-				g:SetText(framerate_text.." | "..latency_text)
+				g:SetText(latency_text)
 			end
-			
+
 			--check for overlapping text (JUST IN CASE)
 			if g:GetStringWidth() > addon:GetWidth() then
 				addon:SetWidth(g:GetStringWidth() + 20)
@@ -245,7 +233,6 @@ function addon:DrawGUI()
 			end
 
 		end
-
 	end)
 	
 	addon:SetScript("OnLeave",function()
@@ -253,17 +240,24 @@ function addon:DrawGUI()
 	end)
 
 	addon:SetScript("OnEnter",function()
-	
 		GameTooltip:SetOwner(self, "ANCHOR_NONE")
 		GameTooltip:SetPoint(self:GetTipAnchor(self))
 		GameTooltip:ClearLines()
 
 		GameTooltip:AddLine(ADDON_NAME)
 		GameTooltip:AddLine(L.TooltipDragInfo, 64/255, 224/255, 208/255)
-		
+		GameTooltip:AddLine(" ")
+
+		local _, _, latencyHome, latencyWorld = GetNetStats()
+		local latency_text = format("|cff%s%d|r "..L.Milliseconds, LagBar_GetThresholdHexColor(latencyHome, 1000, 500, 250, 100, 0), latencyHome)
+		local latency_text_server = format("|cff%s%d|r "..L.Milliseconds, LagBar_GetThresholdHexColor(latencyWorld, 1000, 500, 250, 100, 0), latencyWorld)
+
+		GameTooltip:AddLine("Home realm ping: "..latency_text)
+		GameTooltip:AddLine("World server ping: "..latency_text_server)
+
 		GameTooltip:Show()
 	end)
-	
+
 	addon:Show()
 end
 
