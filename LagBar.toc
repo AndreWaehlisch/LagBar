@@ -1,7 +1,7 @@
 ## Interface: 11303
 ## Title: LagBar
 ## Author: Xruptor
-## Version:  4.1
+## Version:  4.1c
 ## X-Curse-Project-ID: 17487
 ## X-WoWI-ID: 12373
 ## Notes: Displays a simple bar with some Latency Information.
